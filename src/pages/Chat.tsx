@@ -7,7 +7,6 @@ import {
 } from "@material-ui/core";
 import React, { useCallback, useEffect, useState } from "react";
 import { localStorageKeys } from "../common/constants/local-storage-keys";
-import { usePrevious } from "../common/hooks/usePrevious";
 import { ChatItems } from "../components/ChatList";
 import { UserContext } from "../contexts/UserContext";
 import {
@@ -37,59 +36,62 @@ export const ChatPage = () => {
   >(CreatePost);
 
   const [message, setMessage] = useState("");
-
-  const previousUser = usePrevious(user);
-
   const posts = postsData?.posts;
 
-  const subscribeToMorePosts = useCallback(
-    () =>
-      subscribeToMore<
-        PostCreatedSubscription,
-        PostCreatedSubscriptionVariables
-      >({
-        variables: {
-          accessToken:
-            localStorage.getItem(localStorageKeys.ACCESS_TOKEN_KEY) || "",
-        },
-        document: PostCreated,
-        updateQuery: (prev, { subscriptionData }) => {
-          if (!subscriptionData.data) {
-            return prev;
-          }
-          const newPost = subscriptionData.data.postCreated;
-          const previousPosts = prev.posts || [];
+  const subscribeToMorePosts = useCallback(() => {
+    if (!subscribeToMore) {
+      return;
+    }
+    return subscribeToMore<
+      PostCreatedSubscription,
+      PostCreatedSubscriptionVariables
+    >({
+      variables: {
+        accessToken:
+          localStorage.getItem(localStorageKeys.ACCESS_TOKEN_KEY) || "",
+      },
+      document: PostCreated,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) {
+          return prev;
+        }
+        const newPost = subscriptionData.data.postCreated;
+        const previousPosts = prev.posts || [];
 
-          const newPosts = [...previousPosts, newPost];
+        const newPosts = [...previousPosts, newPost];
 
-          return {
-            __typename: "Query",
-            posts:
-              newPosts.length > 50
-                ? newPosts.slice(1, newPosts.length)
-                : newPosts,
-          };
-        },
-        onError: (e) => console.log({ e }),
-      }),
-    [subscribeToMore]
-  );
+        return {
+          __typename: "Query",
+          posts:
+            newPosts.length > 50
+              ? newPosts.slice(1, newPosts.length)
+              : newPosts,
+        };
+      },
+      onError: (e) => console.log({ e }),
+    });
+  }, [subscribeToMore]);
 
   useEffect(() => {
-    if (!previousUser && user) {
-      subscribeToMorePosts();
-    }
-  }, [user, previousUser, subscribeToMorePosts]);
+    subscribeToMorePosts();
+  }, [subscribeToMorePosts]);
 
   const handleLogout = async () => {
     localStorage.clear();
     setUser(undefined);
   };
 
-  const handleSendMessage = () => {
-    createPost({
+  const handleSendMessage = async () => {
+    await createPost({
       variables: { body: message, roomId: "1" },
     }).catch(console.log);
+    setMessage("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSendMessage();
+    }
   };
 
   const handleMessageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +165,7 @@ export const ChatPage = () => {
           label="Message"
           value={message}
           onChange={handleMessageChange}
+          onKeyDown={handleKeyDown}
         />
         {createPostLoading ? (
           <CircularProgress />
