@@ -1,19 +1,29 @@
-import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  ApolloProvider,
+  InMemoryCache,
+} from "@apollo/client";
 import React from "react";
 import ReactDOM from "react-dom";
+import { authLink } from "./apollo/links/authLink";
+import { splitLink } from "./apollo/links/splitLink";
 import App from "./App";
+import { UserContext } from "./contexts/UserContext";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4100/graphql",
   cache: new InMemoryCache(),
+  link: ApolloLink.from([authLink, splitLink]),
 });
 
 ReactDOM.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <App />
+      <UserContext.Provider>
+        <App />
+      </UserContext.Provider>
     </ApolloProvider>
   </React.StrictMode>,
   document.getElementById("root")
