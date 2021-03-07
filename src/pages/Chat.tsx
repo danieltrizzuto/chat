@@ -5,7 +5,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { localStorageKeys } from "../common/constants/local-storage-keys";
 import { ChatItems } from "../components/ChatList";
 import { UserContext } from "../contexts/UserContext";
@@ -27,11 +27,14 @@ export const ChatPage = () => {
   const { setUser, user } = UserContext.useContainer();
   const [currentRoomId, setCurrentRoomId] = useState(ROOM_IDS[0]);
 
+  const unsubscribeMethodRef = useRef<any>();
+
   const { data: postsData, loading: postsLoading, subscribeToMore } = useQuery<
     PostsQuery,
     PostsQueryVariables
   >(Posts, {
     variables: { roomId: currentRoomId },
+    fetchPolicy: "network-only",
   });
   const [createPost, { loading: createPostLoading }] = useMutation<
     CreatePostMutation,
@@ -39,19 +42,22 @@ export const ChatPage = () => {
   >(CreatePost);
 
   const [message, setMessage] = useState("");
-  const posts = postsData?.posts;
+  const postsToShow = postsData?.posts.filter(
+    (p) => p.roomId === currentRoomId
+  );
 
   const subscribeToMorePosts = useCallback(() => {
-    if (!subscribeToMore) {
-      return;
+    if (unsubscribeMethodRef.current) {
+      unsubscribeMethodRef.current();
     }
-    return subscribeToMore<
+    unsubscribeMethodRef.current = subscribeToMore<
       PostCreatedSubscription,
       PostCreatedSubscriptionVariables
     >({
       variables: {
         accessToken:
           localStorage.getItem(localStorageKeys.ACCESS_TOKEN_KEY) || "",
+        subscribedRoom: currentRoomId,
       },
       document: PostCreated,
       updateQuery: (prev, { subscriptionData }) => {
@@ -73,11 +79,11 @@ export const ChatPage = () => {
       },
       onError: (e) => console.log({ e }),
     });
-  }, [subscribeToMore]);
+  }, [subscribeToMore, currentRoomId]);
 
   useEffect(() => {
     subscribeToMorePosts();
-  }, [subscribeToMorePosts]);
+  }, [subscribeToMorePosts, currentRoomId]);
 
   const handleLogout = async () => {
     localStorage.clear();
@@ -86,7 +92,7 @@ export const ChatPage = () => {
 
   const handleSendMessage = async () => {
     await createPost({
-      variables: { body: message, roomId: "1" },
+      variables: { body: message, roomId: currentRoomId },
     }).catch(console.log);
     setMessage("");
   };
@@ -135,6 +141,7 @@ export const ChatPage = () => {
           <div>
             {ROOM_IDS.map((rId) => (
               <Button
+                key={rId}
                 onClick={() => handleRoomChange(rId)}
                 variant="text"
                 style={{
@@ -175,7 +182,7 @@ export const ChatPage = () => {
           maxHeight: "60vh",
         }}
       >
-        <ChatItems items={posts || []} />
+        <ChatItems items={postsToShow || []} />
       </div>
       <div
         style={{

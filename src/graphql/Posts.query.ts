@@ -6,6 +6,7 @@ export const Posts = gql`
       _id
       body
       author
+      roomId
     }
   }
 `;

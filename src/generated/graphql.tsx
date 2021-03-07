@@ -36,6 +36,7 @@ export type PostResponse = {
   _id: Scalars['String'];
   body: Scalars['String'];
   author: Scalars['String'];
+  roomId: Scalars['String'];
 };
 
 export type Query = {
@@ -97,6 +98,7 @@ export type SubscriptionPostCreatedArgs = {
 
 export type PostCreatedInput = {
   accessToken: Scalars['String'];
+  subscribedRoom: Scalars['String'];
 };
 
 export type CreatePostMutationVariables = Exact<{
@@ -115,6 +117,7 @@ export type CreatePostMutation = (
 
 export type PostCreatedSubscriptionVariables = Exact<{
   accessToken: Scalars['String'];
+  subscribedRoom: Scalars['String'];
 }>;
 
 
@@ -122,7 +125,7 @@ export type PostCreatedSubscription = (
   { __typename?: 'Subscription' }
   & { postCreated: (
     { __typename?: 'PostResponse' }
-    & Pick<PostResponse, '_id' | 'body' | 'author'>
+    & Pick<PostResponse, '_id' | 'body' | 'author' | 'roomId'>
   ) }
 );
 
@@ -135,7 +138,7 @@ export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'PostResponse' }
-    & Pick<PostResponse, '_id' | 'body' | 'author'>
+    & Pick<PostResponse, '_id' | 'body' | 'author' | 'roomId'>
   )> }
 );
 
@@ -221,11 +224,12 @@ export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutati
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
 export const PostCreatedDocument = gql`
-    subscription PostCreated($accessToken: String!) {
-  postCreated(input: {accessToken: $accessToken}) {
+    subscription PostCreated($accessToken: String!, $subscribedRoom: String!) {
+  postCreated(input: {accessToken: $accessToken, subscribedRoom: $subscribedRoom}) {
     _id
     body
     author
+    roomId
   }
 }
     `;
@@ -243,6 +247,7 @@ export const PostCreatedDocument = gql`
  * const { data, loading, error } = usePostCreatedSubscription({
  *   variables: {
  *      accessToken: // value for 'accessToken'
+ *      subscribedRoom: // value for 'subscribedRoom'
  *   },
  * });
  */
@@ -257,6 +262,7 @@ export const PostsDocument = gql`
     _id
     body
     author
+    roomId
   }
 }
     `;
