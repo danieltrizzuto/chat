@@ -1,5 +1,10 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { Button, CircularProgress, TextField } from "@material-ui/core";
+import {
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+} from "@material-ui/core";
 import React, { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { localStorageKeys } from "./common/constants/local-storage-keys";
@@ -212,9 +217,24 @@ function App() {
             justifyContent: "flex-end",
           }}
         >
-          <Button onClick={handleLogout} variant="text">
-            Sair
-          </Button>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Typography component="span" variant="h5" color="textPrimary">
+              {user?.username || ""}
+            </Typography>
+            <Button
+              onClick={handleLogout}
+              variant="text"
+              style={{ marginLeft: 8 }}
+            >
+              Logout
+            </Button>
+          </div>
         </div>
         <div
           style={{
