@@ -21,14 +21,17 @@ import { CreatePost } from "../graphql/CreatePost.mutation";
 import { PostCreated } from "../graphql/PostCreated.subscription";
 import { Posts } from "../graphql/Posts.query";
 
+const ROOM_IDS = ["1", "2"];
+
 export const ChatPage = () => {
   const { setUser, user } = UserContext.useContainer();
+  const [currentRoomId, setCurrentRoomId] = useState(ROOM_IDS[0]);
 
   const { data: postsData, loading: postsLoading, subscribeToMore } = useQuery<
     PostsQuery,
     PostsQueryVariables
   >(Posts, {
-    variables: { roomId: "1" },
+    variables: { roomId: currentRoomId },
   });
   const [createPost, { loading: createPostLoading }] = useMutation<
     CreatePostMutation,
@@ -98,6 +101,10 @@ export const ChatPage = () => {
     setMessage(event.target.value);
   };
 
+  const handleRoomChange = (selectedId: string) => {
+    setCurrentRoomId(selectedId);
+  };
+
   if (postsLoading) {
     return <CircularProgress />;
   }
@@ -121,20 +128,41 @@ export const ChatPage = () => {
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
+            justifyContent: "space-between",
+            width: "100%",
           }}
         >
-          <Typography component="span" variant="h5" color="textPrimary">
-            {user?.username || ""}
-          </Typography>
-          <Button
-            onClick={handleLogout}
-            variant="text"
-            style={{ marginLeft: 8 }}
+          <div>
+            {ROOM_IDS.map((rId) => (
+              <Button
+                onClick={() => handleRoomChange(rId)}
+                variant="text"
+                style={{
+                  fontWeight: currentRoomId === rId ? "bold" : "normal",
+                }}
+              >
+                Room {rId}
+              </Button>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
           >
-            Logout
-          </Button>
+            <Typography component="span" variant="h5" color="textPrimary">
+              {user?.username || ""}
+            </Typography>
+            <Button
+              onClick={handleLogout}
+              variant="text"
+              style={{ marginLeft: 8 }}
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
       <div
