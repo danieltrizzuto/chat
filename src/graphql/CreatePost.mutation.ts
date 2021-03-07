@@ -7,3 +7,5 @@ export const CreatePost = gql`
     }
   }
 `;
+
+export {};

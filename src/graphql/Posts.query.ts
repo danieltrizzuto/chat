@@ -9,3 +9,5 @@ export const Posts = gql`
     }
   }
 `;
+
+export {};

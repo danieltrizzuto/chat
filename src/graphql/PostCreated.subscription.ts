@@ -9,3 +9,5 @@ export const PostCreated = gql`
     }
   }
 `;
+
+export {};

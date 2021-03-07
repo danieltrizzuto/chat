@@ -12,3 +12,5 @@ export const SignUp = gql`
     }
   }
 `;
+
+export {};
