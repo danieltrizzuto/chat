@@ -17,7 +17,7 @@ import logo from "../logo.svg";
 export const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { setUser, user, loading: userLoading } = UserContext.useContainer();
+  const { setUser, loading: userLoading } = UserContext.useContainer();
 
   const [signUp, { loading: signUpLoading }] = useMutation<
     SignUpMutation,
