@@ -1,10 +1,11 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import {
   Button,
   CircularProgress,
   TextField,
   Typography,
 } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { localStorageKeys } from "../common/constants/local-storage-keys";
 import { ChatItems } from "../components/ChatList";
@@ -14,20 +15,38 @@ import {
   CreatePostMutationVariables,
   PostCreatedSubscription,
   PostCreatedSubscriptionVariables,
+  PostErrorSubscription,
+  PostErrorSubscriptionVariables,
   PostsQuery,
   PostsQueryVariables,
 } from "../generated/graphql";
 import { CreatePost } from "../graphql/CreatePost.mutation";
 import { PostCreated } from "../graphql/PostCreated.subscription";
+import { PostError } from "../graphql/PostError.subscription";
 import { Posts } from "../graphql/Posts.query";
 
 const ROOM_IDS = ["1", "2"];
 
 export const ChatPage = () => {
   const { setUser, user } = UserContext.useContainer();
-  const [currentRoomId, setCurrentRoomId] = useState(ROOM_IDS[0]);
 
-  const unsubscribeMethodRef = useRef<any>();
+  const [currentRoomId, setCurrentRoomId] = useState(ROOM_IDS[0]);
+  const [message, setMessage] = useState("");
+  const [shouldShowError, setShouldShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const unsubscribeFromRoomMethodRef = useRef<any>();
+
+  const { data: postErrorData } = useSubscription<
+    PostErrorSubscription,
+    PostErrorSubscriptionVariables
+  >(PostError, {
+    variables: {
+      accessToken:
+        localStorage.getItem(localStorageKeys.ACCESS_TOKEN_KEY) || "",
+      userId: user?._id || "",
+    },
+  });
 
   const { data: postsData, loading: postsLoading, subscribeToMore } = useQuery<
     PostsQuery,
@@ -41,16 +60,26 @@ export const ChatPage = () => {
     CreatePostMutationVariables
   >(CreatePost);
 
-  const [message, setMessage] = useState("");
   const postsToShow = postsData?.posts.filter(
     (p) => p.roomId === currentRoomId
   );
 
-  const subscribeToMorePosts = useCallback(() => {
-    if (unsubscribeMethodRef.current) {
-      unsubscribeMethodRef.current();
+  useEffect(() => {
+    if (postErrorData && postErrorData.postError) {
+      const { author, body, roomId } = postErrorData.postError;
+      setErrorMessage(
+        `${author}: Failed to run "${body}" on room ${roomId}. Please check the stock ticker.`
+      );
+      setShouldShowError(true);
+      setTimeout(() => setShouldShowError(false), 8000);
     }
-    unsubscribeMethodRef.current = subscribeToMore<
+  }, [postErrorData]);
+
+  const subscribeToMorePosts = useCallback(() => {
+    if (unsubscribeFromRoomMethodRef.current) {
+      unsubscribeFromRoomMethodRef.current();
+    }
+    unsubscribeFromRoomMethodRef.current = subscribeToMore<
       PostCreatedSubscription,
       PostCreatedSubscriptionVariables
     >({
@@ -215,6 +244,22 @@ export const ChatPage = () => {
           </Button>
         )}
       </div>
+      {shouldShowError && (
+        <Alert
+          severity="warning"
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => setShouldShowError(false)}
+            >
+              OK
+            </Button>
+          }
+        >
+          {errorMessage}
+        </Alert>
+      )}
     </div>
   );
 };

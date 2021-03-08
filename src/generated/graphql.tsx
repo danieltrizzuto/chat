@@ -39,6 +39,14 @@ export type PostResponse = {
   roomId: Scalars['String'];
 };
 
+export type PostErrorResponse = {
+  __typename?: 'PostErrorResponse';
+  body: Scalars['String'];
+  author: Scalars['String'];
+  roomId: Scalars['String'];
+  userId: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   user: User;
@@ -89,6 +97,7 @@ export type CreatePostInput = {
 export type Subscription = {
   __typename?: 'Subscription';
   postCreated: PostResponse;
+  postError: PostErrorResponse;
 };
 
 
@@ -96,9 +105,19 @@ export type SubscriptionPostCreatedArgs = {
   input: PostCreatedInput;
 };
 
+
+export type SubscriptionPostErrorArgs = {
+  input: PostErrorInput;
+};
+
 export type PostCreatedInput = {
   accessToken: Scalars['String'];
   subscribedRoom: Scalars['String'];
+};
+
+export type PostErrorInput = {
+  accessToken: Scalars['String'];
+  userId: Scalars['String'];
 };
 
 export type CreatePostMutationVariables = Exact<{
@@ -126,6 +145,20 @@ export type PostCreatedSubscription = (
   & { postCreated: (
     { __typename?: 'PostResponse' }
     & Pick<PostResponse, '_id' | 'body' | 'author' | 'roomId'>
+  ) }
+);
+
+export type PostErrorSubscriptionVariables = Exact<{
+  accessToken: Scalars['String'];
+  userId: Scalars['String'];
+}>;
+
+
+export type PostErrorSubscription = (
+  { __typename?: 'Subscription' }
+  & { postError: (
+    { __typename?: 'PostErrorResponse' }
+    & Pick<PostErrorResponse, 'body' | 'author' | 'roomId'>
   ) }
 );
 
@@ -256,6 +289,38 @@ export function usePostCreatedSubscription(baseOptions: Apollo.SubscriptionHookO
       }
 export type PostCreatedSubscriptionHookResult = ReturnType<typeof usePostCreatedSubscription>;
 export type PostCreatedSubscriptionResult = Apollo.SubscriptionResult<PostCreatedSubscription>;
+export const PostErrorDocument = gql`
+    subscription PostError($accessToken: String!, $userId: String!) {
+  postError(input: {accessToken: $accessToken, userId: $userId}) {
+    body
+    author
+    roomId
+  }
+}
+    `;
+
+/**
+ * __usePostErrorSubscription__
+ *
+ * To run a query within a React component, call `usePostErrorSubscription` and pass it any options that fit your needs.
+ * When your component renders, `usePostErrorSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePostErrorSubscription({
+ *   variables: {
+ *      accessToken: // value for 'accessToken'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function usePostErrorSubscription(baseOptions: Apollo.SubscriptionHookOptions<PostErrorSubscription, PostErrorSubscriptionVariables>) {
+        return Apollo.useSubscription<PostErrorSubscription, PostErrorSubscriptionVariables>(PostErrorDocument, baseOptions);
+      }
+export type PostErrorSubscriptionHookResult = ReturnType<typeof usePostErrorSubscription>;
+export type PostErrorSubscriptionResult = Apollo.SubscriptionResult<PostErrorSubscription>;
 export const PostsDocument = gql`
     query Posts($roomId: String!) {
   posts(input: {roomId: $roomId}) {
