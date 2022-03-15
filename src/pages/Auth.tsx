@@ -84,6 +84,7 @@ export const AuthPage = () => {
       <TextField
         id="standard-basic"
         label="Password"
+        type="password"
         value={password}
         onChange={handleChangePassword}
       />
@@ -95,6 +96,7 @@ export const AuthPage = () => {
             <Button
               color="primary"
               variant="contained"
+              disabled={!username || !password}
               style={{ marginRight: 6 }}
               onClick={handleLogin}
             >
@@ -103,6 +105,7 @@ export const AuthPage = () => {
             <Button
               color="secondary"
               variant="contained"
+              disabled={!username || !password}
               style={{ marginLeft: 6 }}
               onClick={handleSignUp}
             >
