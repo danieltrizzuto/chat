@@ -28,7 +28,7 @@ const ChatListItem: FC<{ item: PostResponse; isLast: boolean }> = ({
     <>
       <ListItem>
         <ListItemAvatar>
-          <Avatar src="https://dummyimage.com/40" />
+          <Avatar src="https://picsum.photos/40/40" />
         </ListItemAvatar>
         <ListItemText
           primary={
